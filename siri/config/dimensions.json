@@ -1,0 +1,9 @@
+{
+  "pillars": ["Process", "Technology", "Organization"],
+  "dimensions": [
+    { "id": "proc_ops", "name": "Operations Excellence", "pillar": "Process", "weight": 1.0 },
+    { "id": "tech_connect", "name": "Connectivity & Data", "pillar": "Technology", "weight": 1.0 },
+    { "id": "tech_automation", "name": "Automation & Control", "pillar": "Technology", "weight": 1.0 },
+    { "id": "org_skills", "name": "People & Skills", "pillar": "Organization", "weight": 1.0 }
+  ]
+}

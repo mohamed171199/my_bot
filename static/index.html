@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ATLAM</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f6f7fb; }
+    header { background: #0f766e; color: #fff; padding: 12px 16px; }
+    main { max-width: 820px; margin: 16px auto; padding: 0 12px; }
+    #chat { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; min-height: 360px; }
+    .msg { padding: 8px 10px; margin: 6px 0; border-radius: 8px; }
+    .user { background: #e0f2fe; text-align: right; }
+    .bot { background: #f1f5f9; }
+    .row { display: flex; gap: 8px; margin-top: 10px; }
+    input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; }
+    button { padding: 10px 16px; background: #0f766e; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .starters { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+    .starter { background: #e2e8f0; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+  </style>
+  <script>
+    let history = [];
+
+    async function loadStarters() {
+      const res = await fetch('/starters');
+      const data = await res.json();
+      const box = document.getElementById('starters');
+      box.innerHTML = '';
+      (data.starters || []).forEach(s => {
+        const b = document.createElement('span');
+        b.className = 'starter';
+        b.textContent = s.label || s;
+        b.onclick = () => {
+          document.getElementById('input').value = b.textContent;
+        };
+        box.appendChild(b);
+      });
+    }
+
+    function pushMsg(role, content) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+      div.textContent = content;
+      document.getElementById('chat').appendChild(div);
+      document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+    }
+
+    async function sendMsg() {
+      const inp = document.getElementById('input');
+      const btn = document.getElementById('send');
+      const text = inp.value.trim();
+      if (!text) return;
+      pushMsg('user', text);
+      history.push({ role: 'user', content: text });
+      inp.value = '';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text, history }) });
+        const data = await res.json();
+        pushMsg('assistant', data.reply || '');
+        history.push({ role: 'assistant', content: data.reply || '' });
+      } catch (e) {
+        pushMsg('assistant', 'حصل خطأ في الطلب.');
+      } finally {
+        btn.disabled = false;
+        document.getElementById('input').focus();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStarters();
+      document.getElementById('send').onclick = sendMsg;
+      document.getElementById('input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendMsg();
+      });
+    });
+  </script>
+  </head>
+<body>
+  <header>
+    <strong>ATLAM</strong>
+  </header>
+  <main>
+    <div id="starters" class="starters"></div>
+    <div id="chat"></div>
+    <div class="row">
+      <input id="input" placeholder="اكتب رسالتك هنا..." />
+      <button id="send">إرسال</button>
+    </div>
+  </main>
+</body>
+</html>
